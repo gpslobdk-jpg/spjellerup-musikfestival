@@ -2,6 +2,10 @@ import React, { useEffect, useRef, useState } from 'react'
 
 const posterFile = '/spjellerup-musikfestival-2026.png'
 
+type AppLocationState = {
+  pathname: string
+}
+
 type FestivalQuizOption = {
   id: string
   text: string
@@ -160,6 +164,28 @@ const festivalBingoItems = [
   'Smil til en ven',
   'Sig “god festival”',
 ]
+
+const getCurrentLocationState = (): AppLocationState => {
+  if (typeof window === 'undefined') {
+    return { pathname: '/' }
+  }
+
+  const normalizedPath = window.location.pathname.replace(/\/+$/, '') || '/'
+
+  return {
+    pathname: normalizedPath === '' ? '/' : normalizedPath,
+  }
+}
+
+const getIsDesktopViewport = (): boolean => {
+  if (typeof window === 'undefined' || !window.matchMedia) return false
+  return window.matchMedia('(min-width: 900px)').matches
+}
+
+const getPrefersReducedMotion = (): boolean => {
+  if (typeof window === 'undefined' || !window.matchMedia) return false
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
 
 const shuffleArray = <T,>(items: readonly T[]): T[] => {
   const copy = [...items]
@@ -404,79 +430,232 @@ const FestivalBingo: React.FC = () => {
   )
 }
 
+const FestivalGamesPage: React.FC<{
+  isDesktopViewport: boolean
+  onBackHome: () => void
+}> = ({ isDesktopViewport, onBackHome }) => {
+  let panelContent: React.ReactNode
+
+  if (isDesktopViewport) {
+    panelContent = (
+      <section className="games-page__panel games-page__panel--notice">
+        <div className="games-page__status">Desktop</div>
+        <h2>Festivalspillene er lavet til mobil.</h2>
+        <p>Åbn siden på din telefon for den bedste oplevelse.</p>
+      </section>
+    )
+  } else {
+    panelContent = (
+      <section className="games-page__panel">
+        {/* TODO: Tilføj tidsstyring for Festivalspil tættere på festivaldagen, fx 4. juni 2026 kl. 10.30–14.30. */}
+        <div className="games-page__status games-page__status--open">Klar til spil</div>
+
+        <div className="games-grid">
+          <div className="game-card">
+            <h3>Festivalquiz</h3>
+            <FestivalQuiz />
+          </div>
+
+          <div className="game-card">
+            <h3>Hvilken festivaltype er du?</h3>
+            <FestivalTypeTest />
+          </div>
+
+          <div className="game-card">
+            <h3>Festival-bingo</h3>
+            <FestivalBingo />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  return (
+    <main className="games-page">
+      <div className="games-page__shell">
+        <button className="btn outline games-page__back" onClick={onBackHome} type="button">
+          Tilbage til forsiden
+        </button>
+
+        <section className="games-page__hero">
+          <div className="badge">Mobiloplevelse</div>
+          <h1 className="games-page__title">Festivalspil</h1>
+          <p className="games-page__lead">Små aktiviteter til mobilen før eller under festivalen.</p>
+        </section>
+
+        {panelContent}
+      </div>
+    </main>
+  )
+}
+
 const App: React.FC = () => {
+  const [locationState, setLocationState] = useState<AppLocationState>(() => getCurrentLocationState())
+  const [isDesktopViewport, setIsDesktopViewport] = useState<boolean>(() => getIsDesktopViewport())
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(() => getPrefersReducedMotion())
   const [isOpen, setIsOpen] = useState(false)
   const [showIntro, setShowIntro] = useState(false)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [soundOn, setSoundOn] = useState(false)
+
+  const isGamesPage = locationState.pathname === '/spil'
+
+  const stopIntroMedia = () => {
+    try {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current.currentTime = 0
+      }
+    } catch (err) {
+      // ignore
+    }
+
+    try {
+      if (videoRef.current) {
+        videoRef.current.pause()
+        videoRef.current.currentTime = 0
+        videoRef.current.muted = true
+      }
+    } catch (err) {
+      // ignore
+    }
+
+    setSoundOn(false)
+  }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setIsOpen(false)
     }
+
     window.addEventListener('keydown', onKey)
+
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
   useEffect(() => {
-    // Prevent scrolling when modal or intro is visible
     if (isOpen || showIntro) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
     }
+
+    return () => {
+      document.body.style.overflow = ''
+    }
   }, [isOpen, showIntro])
 
-  // Decide whether to show intro video: only on desktop and when user does not prefer reduced motion
   useEffect(() => {
     if (typeof window === 'undefined') return
-    try {
-      const isDesktop = window.matchMedia && window.matchMedia('(min-width: 900px)').matches
-      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      if (isDesktop && !prefersReduced) {
-        setShowIntro(true)
+
+    const syncLocation = () => setLocationState(getCurrentLocationState())
+    window.addEventListener('popstate', syncLocation)
+
+    return () => window.removeEventListener('popstate', syncLocation)
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return
+
+    const desktopQuery = window.matchMedia('(min-width: 900px)')
+    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const syncMedia = () => {
+      setIsDesktopViewport(desktopQuery.matches)
+      setPrefersReducedMotion(reducedMotionQuery.matches)
+    }
+
+    syncMedia()
+
+    if (typeof desktopQuery.addEventListener === 'function') {
+      desktopQuery.addEventListener('change', syncMedia)
+      reducedMotionQuery.addEventListener('change', syncMedia)
+
+      return () => {
+        desktopQuery.removeEventListener('change', syncMedia)
+        reducedMotionQuery.removeEventListener('change', syncMedia)
       }
-    } catch (err) {
-      // ignore
+    }
+
+    desktopQuery.addListener(syncMedia)
+    reducedMotionQuery.addListener(syncMedia)
+
+    return () => {
+      desktopQuery.removeListener(syncMedia)
+      reducedMotionQuery.removeListener(syncMedia)
     }
   }, [])
 
-  const videoRef = useRef<HTMLVideoElement | null>(null)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const [soundOn, setSoundOn] = useState(false)
+  useEffect(() => {
+    if (isGamesPage) {
+      setShowIntro(false)
+      setIsOpen(false)
+      stopIntroMedia()
+      return
+    }
+
+    if (isDesktopViewport && !prefersReducedMotion) {
+      setShowIntro(true)
+    } else {
+      setShowIntro(false)
+    }
+  }, [isGamesPage, isDesktopViewport, prefersReducedMotion])
+
+  const navigateTo = (path: string) => {
+    if (typeof window === 'undefined') return
+
+    const currentLocation = getCurrentLocationState()
+
+    if (currentLocation.pathname === path) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+      return
+    }
+
+    stopIntroMedia()
+    setShowIntro(false)
+    setIsOpen(false)
+    window.history.pushState({}, '', path)
+    setLocationState(getCurrentLocationState())
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }
 
   const toggleSound = async () => {
-    const v = videoRef.current
-    const a = audioRef.current
-    if (!v || !a) return
+    const video = videoRef.current
+    const audio = audioRef.current
+
+    if (!video || !audio) return
 
     if (!soundOn) {
-      // Enable sound: unmute video quietly and play voiceover
       try {
-        v.muted = false
-        v.volume = 0.15
-        a.volume = 1.0
-        const p = a.play()
-        if (p && typeof p.then === 'function') p.catch(() => {})
+        video.muted = false
+        video.volume = 0.15
+        audio.volume = 1.0
+        const playPromise = audio.play()
+
+        if (playPromise && typeof playPromise.then === 'function') {
+          playPromise.catch(() => {})
+        }
+
         setSoundOn(true)
       } catch (err) {
         console.warn('Could not start audio', err)
       }
     } else {
-      // Disable sound
       try {
-        a.pause()
-      } catch (err) {}
-      v.muted = true
+        audio.pause()
+      } catch (err) {
+        // ignore
+      }
+
+      video.muted = true
       setSoundOn(false)
     }
   }
 
   const enterSite = () => {
-    // Hide intro first, then scroll to hero to ensure smooth navigation
     setShowIntro(false)
-    // stop/pause audio and mute video
-    try { audioRef.current?.pause() } catch (e) {}
-    try { if (videoRef.current) { videoRef.current.muted = true } } catch (e) {}
-    setSoundOn(false)
+    stopIntroMedia()
+
     setTimeout(() => {
       const el = document.getElementById('hero')
       if (el) el.scrollIntoView({ behavior: 'smooth' })
@@ -485,19 +664,25 @@ const App: React.FC = () => {
 
   const goToProgram = () => {
     setShowIntro(false)
-    // stop/pause audio and mute video
-    try { audioRef.current?.pause() } catch (e) {}
-    try { if (videoRef.current) { videoRef.current.muted = true } } catch (e) {}
-    setSoundOn(false)
+    stopIntroMedia()
+
     setTimeout(() => {
       const el = document.getElementById('program')
       if (el) el.scrollIntoView({ behavior: 'smooth' })
     }, 60)
   }
 
+  if (isGamesPage) {
+    return (
+      <FestivalGamesPage
+        isDesktopViewport={isDesktopViewport}
+        onBackHome={() => navigateTo('/')}
+      />
+    )
+  }
+
   return (
     <div className="app">
-      {/* Intro video (desktop only) */}
       {showIntro && (
         <section className="intro-video" aria-hidden={false}>
           <video
@@ -511,7 +696,6 @@ const App: React.FC = () => {
             preload="metadata"
             aria-hidden="true"
           />
-          {/* Audio element - do not autoplay; will be played on user interaction */}
           <audio ref={audioRef} src="/festival-voiceover.mp3" preload="none" />
 
           <div className="intro-overlay">
@@ -522,22 +706,21 @@ const App: React.FC = () => {
               <div className="intro-meta">Torsdag d. 04. juni 2026 • Start kl. 11.00</div>
 
               <div className="intro-ctas">
-                <button className="btn primary large" onClick={enterSite}>Gå ind på siden</button>
-                <button className="btn outline large" onClick={goToProgram}>Se program</button>
+                <button className="btn primary large" onClick={enterSite} type="button">Gå ind på siden</button>
+                <button className="btn outline large" onClick={goToProgram} type="button">Se program</button>
                 <button
                   className="btn outline large sound-toggle"
                   onClick={toggleSound}
                   aria-pressed={soundOn}
                   aria-label={soundOn ? 'Slå lyd fra' : 'Slå lyd til'}
+                  type="button"
                 >
                   {soundOn ? 'Slå lyd fra' : 'Slå lyd til'}
                 </button>
               </div>
             </div>
-            
           </div>
         </section>
-
       )}
 
       <header id="hero" className="hero">
@@ -575,10 +758,10 @@ const App: React.FC = () => {
             </p>
 
             <div className="cta-row">
-                <a className="btn primary" href="#program">Se program</a>
-                <button className="btn outline" onClick={() => setIsOpen(true)}>Se plakat</button>
-                <a className="btn download" href={posterFile} download="spjellerup-musikfestival-2026.png">Download plakat</a>
-                <button className="btn primary mobile-only" onClick={() => { const el = document.getElementById('festivalspil'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }}>Prøv festivalspil</button>
+              <a className="btn primary" href="#program">Se program</a>
+              <button className="btn outline" onClick={() => setIsOpen(true)} type="button">Se plakat</button>
+              <a className="btn download" href={posterFile} download="spjellerup-musikfestival-2026.png">Download plakat</a>
+              <button className="btn primary mobile-only" onClick={() => navigateTo('/spil')} type="button">Prøv festivalspil</button>
             </div>
           </div>
 
@@ -619,28 +802,6 @@ const App: React.FC = () => {
               <li><span className="time">13.00</span> — Show, optrædener og overraskelser</li>
               <li><span className="time">14.00</span> — Tak for i dag</li>
             </ul>
-          </div>
-        </section>
-
-        <section id="festivalspil" className="section festival-games mobile-only">
-          <h2>Festivalspil</h2>
-          <p>Små sjove aktiviteter, du kan prøve på mobilen før eller under festivalen.</p>
-
-          <div className="games-grid">
-            <div className="game-card">
-              <h3>Festivalquiz</h3>
-              <FestivalQuiz />
-            </div>
-
-            <div className="game-card">
-              <h3>Hvilken festivaltype er du?</h3>
-              <FestivalTypeTest />
-            </div>
-
-            <div className="game-card">
-              <h3>Festival-bingo</h3>
-              <FestivalBingo />
-            </div>
           </div>
         </section>
 
