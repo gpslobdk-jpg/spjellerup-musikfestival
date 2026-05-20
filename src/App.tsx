@@ -6,6 +6,8 @@ type AppLocationState = {
   pathname: string
 }
 
+type FestivalGameRoute = 'dashboard' | 'quiz' | 'type' | 'bingo'
+
 type FestivalQuizOption = {
   id: string
   text: string
@@ -175,6 +177,15 @@ const getCurrentLocationState = (): AppLocationState => {
   return {
     pathname: normalizedPath === '' ? '/' : normalizedPath,
   }
+}
+
+const getFestivalGameRoute = (pathname: string): FestivalGameRoute | null => {
+  if (pathname === '/spil') return 'dashboard'
+  if (pathname === '/spil/quiz') return 'quiz'
+  if (pathname === '/spil/type') return 'type'
+  if (pathname === '/spil/bingo') return 'bingo'
+  if (pathname.startsWith('/spil/')) return 'dashboard'
+  return null
 }
 
 const getIsDesktopViewport = (): boolean => {
@@ -430,62 +441,370 @@ const FestivalBingo: React.FC = () => {
   )
 }
 
-const FestivalGamesPage: React.FC<{
-  isDesktopViewport: boolean
+const FestivalGamesDesktopNotice: React.FC<{
   onBackHome: () => void
-}> = ({ isDesktopViewport, onBackHome }) => {
-  let panelContent: React.ReactNode
+}> = ({ onBackHome }) => (
+  <main className="games-page">
+    <div className="games-page__shell">
+      <button className="btn outline games-page__back" onClick={onBackHome} type="button">
+        Tilbage til forsiden
+      </button>
 
-  if (isDesktopViewport) {
-    panelContent = (
+      <section className="games-page__hero">
+        <div className="badge">Mobiloplevelse</div>
+        <h1 className="games-page__title">Festivalspil</h1>
+        <p className="games-page__lead">Små aktiviteter til mobilen før eller under festivalen.</p>
+      </section>
+
       <section className="games-page__panel games-page__panel--notice">
         <div className="games-page__status">Desktop</div>
         <h2>Festivalspillene er lavet til mobil.</h2>
         <p>Åbn siden på din telefon for den bedste oplevelse.</p>
       </section>
-    )
-  } else {
-    panelContent = (
-      <section className="games-page__panel">
+    </div>
+  </main>
+)
+
+const FestivalGamesDashboardCard: React.FC<{
+  label: string
+  title: string
+  text: string
+  cta: string
+  onOpen: () => void
+}> = ({ label, title, text, cta, onOpen }) => (
+  <article className="games-dashboard__card">
+    <div className="games-dashboard__label">{label}</div>
+    <h2 className="games-dashboard__title">{title}</h2>
+    <p className="games-dashboard__text">{text}</p>
+    <button className="btn primary games-dashboard__cta" onClick={onOpen} type="button">
+      {cta}
+    </button>
+  </article>
+)
+
+const FestivalGamesDashboard: React.FC<{
+  onBackHome: () => void
+  onOpenQuiz: () => void
+  onOpenType: () => void
+  onOpenBingo: () => void
+}> = ({ onBackHome, onOpenQuiz, onOpenType, onOpenBingo }) => (
+  <main className="games-page">
+    <div className="games-page__shell">
+      <button className="btn outline games-page__back" onClick={onBackHome} type="button">
+        Tilbage til forsiden
+      </button>
+
+      <section className="games-page__hero">
+        <div className="badge">Mobiloplevelse</div>
+        <h1 className="games-page__title">Festivalspil</h1>
+        <p className="games-page__lead">Vælg en aktivitet</p>
+      </section>
+
+      <section className="games-page__panel games-page__panel--dashboard">
         {/* TODO: Tilføj tidsstyring for Festivalspil tættere på festivaldagen, fx 4. juni 2026 kl. 10.30–14.30. */}
-        <div className="games-page__status games-page__status--open">Klar til spil</div>
+        <div className="games-dashboard__grid">
+          <FestivalGamesDashboardCard
+            label="10 spørgsmål"
+            title="Festivalquiz"
+            text="Test din festivalviden med 10 spørgsmål."
+            cta="Start quiz"
+            onOpen={onOpenQuiz}
+          />
 
-        <div className="games-grid">
-          <div className="game-card">
-            <h3>Festivalquiz</h3>
-            <FestivalQuiz />
-          </div>
+          <FestivalGamesDashboardCard
+            label="5 spørgsmål"
+            title="Hvilken festivaltype er du?"
+            text="Find ud af om du er Musikmesteren, Bodbossen, Stemningsskaberen eller Scenelegenden."
+            cta="Find min type"
+            onOpen={onOpenType}
+          />
 
-          <div className="game-card">
-            <h3>Hvilken festivaltype er du?</h3>
-            <FestivalTypeTest />
-          </div>
-
-          <div className="game-card">
-            <h3>Festival-bingo</h3>
-            <FestivalBingo />
-          </div>
+          <FestivalGamesDashboardCard
+            label="3 x 3 plade"
+            title="Festival-bingo"
+            text="Kryds ting af, når du spotter festivalstemning."
+            cta="Start bingo"
+            onOpen={onOpenBingo}
+          />
         </div>
       </section>
-    )
+    </div>
+  </main>
+)
+
+const FestivalGameScreen: React.FC<{
+  title: string
+  onBackToMenu: () => void
+  children: React.ReactNode
+}> = ({ title, onBackToMenu, children }) => (
+  <main className="games-page">
+    <div className="games-page__shell">
+      <header className="games-topbar">
+        <button className="btn outline games-topbar__back" onClick={onBackToMenu} type="button">
+          Tilbage til spilmenu
+        </button>
+        <div className="games-topbar__meta">Festivalspil</div>
+        <h1 className="games-topbar__title">{title}</h1>
+      </header>
+
+      <section className="games-page__panel games-page__panel--game">
+        <div className="game-card game-card--screen">
+          {children}
+        </div>
+      </section>
+    </div>
+  </main>
+)
+
+const FestivalQuizPage: React.FC<{
+  onBackToMenu: () => void
+}> = ({ onBackToMenu }) => {
+  const [questions, setQuestions] = useState<FestivalQuizQuestion[]>(() => buildFestivalQuizQuestions())
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null)
+  const [score, setScore] = useState(0)
+  const [isComplete, setIsComplete] = useState(false)
+
+  const currentQuestion = questions[currentIndex]
+  const progressPercent = ((currentIndex + 1) / questions.length) * 100
+
+  if (!currentQuestion) return null
+
+  const handleAnswer = (option: FestivalQuizOption) => {
+    if (selectedOptionId) return
+
+    setSelectedOptionId(option.id)
+
+    if (option.isCorrect) {
+      setScore((currentScore) => currentScore + 1)
+    }
+  }
+
+  const handleNext = () => {
+    if (!selectedOptionId) return
+
+    if (currentIndex === questions.length - 1) {
+      setIsComplete(true)
+      return
+    }
+
+    setCurrentIndex((index) => index + 1)
+    setSelectedOptionId(null)
+  }
+
+  const resetQuiz = () => {
+    setQuestions(buildFestivalQuizQuestions())
+    setCurrentIndex(0)
+    setSelectedOptionId(null)
+    setScore(0)
+    setIsComplete(false)
   }
 
   return (
-    <main className="games-page">
-      <div className="games-page__shell">
-        <button className="btn outline games-page__back" onClick={onBackHome} type="button">
-          Tilbage til forsiden
-        </button>
+    <FestivalGameScreen title="Festivalquiz" onBackToMenu={onBackToMenu}>
+      {isComplete ? (
+        <div className="quiz-wrap">
+          <div className="game-result-card">
+            <div className="game-result-card__label">Dit resultat</div>
+            <div className="game-result-card__title">{getFestivalQuizTitle(score)}</div>
+            <p className="game-result-card__text">Du fik {score} ud af {questions.length} rigtige.</p>
+          </div>
 
-        <section className="games-page__hero">
-          <div className="badge">Mobiloplevelse</div>
-          <h1 className="games-page__title">Festivalspil</h1>
-          <p className="games-page__lead">Små aktiviteter til mobilen før eller under festivalen.</p>
-        </section>
+          <div className="game-actions">
+            <button className="btn primary" onClick={resetQuiz} type="button">Prøv igen</button>
+            <button className="btn game-secondary" onClick={onBackToMenu} type="button">Tilbage til spilmenu</button>
+          </div>
+        </div>
+      ) : (
+        <div className="quiz-wrap">
+          <div className="game-progress">
+            <div className="game-progress__row">
+              <span>Spørgsmål {currentIndex + 1} / {questions.length}</span>
+              <span>{Math.round(progressPercent)}%</span>
+            </div>
+            <div className="game-progress__bar" aria-hidden="true">
+              <div className="game-progress__fill" style={{ width: `${progressPercent}%` }}></div>
+            </div>
+          </div>
 
-        {panelContent}
+          <p className="quiz-question">{currentQuestion.question}</p>
+
+          <div className="quiz-choices">
+            {currentQuestion.options.map((option) => {
+              let stateClass = ''
+
+              if (selectedOptionId) {
+                if (option.isCorrect) {
+                  stateClass = ' correct'
+                } else if (option.id === selectedOptionId) {
+                  stateClass = ' wrong'
+                }
+              }
+
+              return (
+                <button
+                  key={option.id}
+                  className={`quiz-choice${stateClass}`}
+                  onClick={() => handleAnswer(option)}
+                  disabled={Boolean(selectedOptionId)}
+                  type="button"
+                  aria-pressed={option.id === selectedOptionId}
+                >
+                  {option.text}
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="quiz-actions">
+            <button className="btn primary" onClick={handleNext} disabled={!selectedOptionId} type="button">
+              {currentIndex === questions.length - 1 ? 'Se resultat' : 'Næste spørgsmål'}
+            </button>
+          </div>
+        </div>
+      )}
+    </FestivalGameScreen>
+  )
+}
+
+const FestivalTypePage: React.FC<{
+  onBackToMenu: () => void
+}> = ({ onBackToMenu }) => {
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [scores, setScores] = useState<Record<FestivalTypeKey, number>>({
+    Musikmesteren: 0,
+    Bodbossen: 0,
+    Stemningsskaberen: 0,
+    Scenelegenden: 0,
+  })
+  const [result, setResult] = useState<FestivalTypeKey | null>(null)
+
+  const currentQuestion = festivalTypeQuestions[currentIndex]
+  const progressPercent = ((currentIndex + 1) / festivalTypeQuestions.length) * 100
+
+  if (!currentQuestion && !result) return null
+
+  const handleAnswer = (type: FestivalTypeKey) => {
+    const nextScores = {
+      ...scores,
+      [type]: scores[type] + 1,
+    }
+
+    setScores(nextScores)
+
+    if (currentIndex === festivalTypeQuestions.length - 1) {
+      setResult(getFestivalTypeResult(nextScores))
+      return
+    }
+
+    setCurrentIndex((index) => index + 1)
+  }
+
+  const resetTest = () => {
+    setCurrentIndex(0)
+    setScores({
+      Musikmesteren: 0,
+      Bodbossen: 0,
+      Stemningsskaberen: 0,
+      Scenelegenden: 0,
+    })
+    setResult(null)
+  }
+
+  return (
+    <FestivalGameScreen title="Festivaltype" onBackToMenu={onBackToMenu}>
+      {result ? (
+        <div className="type-wrap">
+          <div className="game-result-card">
+            <div className="game-result-card__label">Din festivaltype</div>
+            <div className="game-result-card__title">{result}</div>
+            <p className="game-result-card__text">{festivalTypeDescriptions[result]}</p>
+          </div>
+
+          <div className="game-actions">
+            <button className="btn primary" onClick={resetTest} type="button">Prøv igen</button>
+            <button className="btn game-secondary" onClick={onBackToMenu} type="button">Tilbage til spilmenu</button>
+          </div>
+        </div>
+      ) : (
+        <div className="type-wrap">
+          <div className="game-progress">
+            <div className="game-progress__row">
+              <span>Spørgsmål {currentIndex + 1} / {festivalTypeQuestions.length}</span>
+              <span>{Math.round(progressPercent)}%</span>
+            </div>
+            <div className="game-progress__bar" aria-hidden="true">
+              <div className="game-progress__fill" style={{ width: `${progressPercent}%` }}></div>
+            </div>
+          </div>
+
+          <p className="type-question">{currentQuestion.question}</p>
+
+          <div className="type-options">
+            {currentQuestion.options.map((option) => (
+              <button
+                key={`${currentQuestion.question}-${option.text}`}
+                className="quiz-choice"
+                onClick={() => handleAnswer(option.type)}
+                type="button"
+              >
+                {option.text}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </FestivalGameScreen>
+  )
+}
+
+const FestivalBingoPage: React.FC<{
+  onBackToMenu: () => void
+}> = ({ onBackToMenu }) => {
+  const [checkedItems, setCheckedItems] = useState<string[]>([])
+  const hasBingo = checkedItems.length === festivalBingoItems.length
+
+  const toggleItem = (item: string) => {
+    setCheckedItems((currentItems) => (
+      currentItems.includes(item)
+        ? currentItems.filter((currentItem) => currentItem !== item)
+        : [...currentItems, item]
+    ))
+  }
+
+  const resetBingo = () => setCheckedItems([])
+
+  return (
+    <FestivalGameScreen title="Festival-bingo" onBackToMenu={onBackToMenu}>
+      <div className="bingo-wrap">
+        <p className="quiz-question">Kryds ting af, når du spotter festivalstemning.</p>
+
+        <div className="bingo-grid">
+          {festivalBingoItems.map((item) => {
+            const isChecked = checkedItems.includes(item)
+
+            return (
+              <button
+                key={item}
+                className={`bingo-cell${isChecked ? ' checked' : ''}`}
+                onClick={() => toggleItem(item)}
+                type="button"
+                aria-pressed={isChecked}
+              >
+                {item}
+              </button>
+            )
+          })}
+        </div>
+
+        {hasBingo && <div className="bingo-winner">BINGO! Du er klar til festivalstemning.</div>}
+
+        <div className="bingo-actions">
+          <button className="btn primary" onClick={resetBingo} type="button">Nulstil</button>
+          <button className="btn game-secondary" onClick={onBackToMenu} type="button">Tilbage til spilmenu</button>
+        </div>
       </div>
-    </main>
+    </FestivalGameScreen>
   )
 }
 
@@ -499,7 +818,8 @@ const App: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [soundOn, setSoundOn] = useState(false)
 
-  const isGamesPage = locationState.pathname === '/spil'
+  const gameRoute = getFestivalGameRoute(locationState.pathname)
+  const isGamesRoute = gameRoute !== null
 
   const stopIntroMedia = () => {
     try {
@@ -587,7 +907,7 @@ const App: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    if (isGamesPage) {
+    if (isGamesRoute) {
       setShowIntro(false)
       setIsOpen(false)
       stopIntroMedia()
@@ -599,7 +919,7 @@ const App: React.FC = () => {
     } else {
       setShowIntro(false)
     }
-  }, [isGamesPage, isDesktopViewport, prefersReducedMotion])
+  }, [isGamesRoute, isDesktopViewport, prefersReducedMotion])
 
   const navigateTo = (path: string) => {
     if (typeof window === 'undefined') return
@@ -672,13 +992,31 @@ const App: React.FC = () => {
     }, 60)
   }
 
-  if (isGamesPage) {
-    return (
-      <FestivalGamesPage
-        isDesktopViewport={isDesktopViewport}
-        onBackHome={() => navigateTo('/')}
-      />
-    )
+  if (gameRoute) {
+    if (isDesktopViewport) {
+      return <FestivalGamesDesktopNotice onBackHome={() => navigateTo('/')} />
+    }
+
+    if (gameRoute === 'dashboard') {
+      return (
+        <FestivalGamesDashboard
+          onBackHome={() => navigateTo('/')}
+          onOpenQuiz={() => navigateTo('/spil/quiz')}
+          onOpenType={() => navigateTo('/spil/type')}
+          onOpenBingo={() => navigateTo('/spil/bingo')}
+        />
+      )
+    }
+
+    if (gameRoute === 'quiz') {
+      return <FestivalQuizPage onBackToMenu={() => navigateTo('/spil')} />
+    }
+
+    if (gameRoute === 'type') {
+      return <FestivalTypePage onBackToMenu={() => navigateTo('/spil')} />
+    }
+
+    return <FestivalBingoPage onBackToMenu={() => navigateTo('/spil')} />
   }
 
   return (
