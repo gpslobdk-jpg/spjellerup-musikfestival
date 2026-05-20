@@ -122,17 +122,17 @@ const App: React.FC = () => {
               <div className="intro-ctas">
                 <button className="btn primary large" onClick={enterSite}>Gå ind på siden</button>
                 <button className="btn outline large" onClick={goToProgram}>Se program</button>
+                <button
+                  className="btn outline large sound-toggle"
+                  onClick={toggleSound}
+                  aria-pressed={soundOn}
+                  aria-label={soundOn ? 'Slå lyd fra' : 'Slå lyd til'}
+                >
+                  {soundOn ? 'Slå lyd fra' : 'Slå lyd til'}
+                </button>
               </div>
             </div>
-
-            <button
-              className="btn sound-toggle"
-              onClick={toggleSound}
-              aria-pressed={soundOn}
-              aria-label={soundOn ? 'Slå lyd fra' : 'Slå lyd til'}
-            >
-              {soundOn ? 'Slå lyd fra' : 'Slå lyd til'}
-            </button>
+            
           </div>
         </section>
       )}
