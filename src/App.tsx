@@ -135,6 +135,7 @@ const App: React.FC = () => {
             
           </div>
         </section>
+
       )}
 
       <header id="hero" className="hero">
@@ -172,9 +173,10 @@ const App: React.FC = () => {
             </p>
 
             <div className="cta-row">
-              <a className="btn primary" href="#program">Se program</a>
-              <button className="btn outline" onClick={() => setIsOpen(true)}>Se plakat</button>
-              <a className="btn download" href={posterFile} download="spjellerup-musikfestival-2026.png">Download plakat</a>
+                <a className="btn primary" href="#program">Se program</a>
+                <button className="btn outline" onClick={() => setIsOpen(true)}>Se plakat</button>
+                <a className="btn download" href={posterFile} download="spjellerup-musikfestival-2026.png">Download plakat</a>
+                <button className="btn primary mobile-only" onClick={() => { const el = document.getElementById('festivalspil'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }}>Prøv festivalspil</button>
             </div>
           </div>
 
@@ -215,6 +217,28 @@ const App: React.FC = () => {
               <li><span className="time">13.00</span> — Show, optrædener og overraskelser</li>
               <li><span className="time">14.00</span> — Tak for i dag</li>
             </ul>
+          </div>
+        </section>
+
+        <section id="festivalspil" className="section festival-games mobile-only">
+          <h2>Festivalspil</h2>
+          <p>Små sjove aktiviteter, du kan prøve på mobilen før eller under festivalen.</p>
+
+          <div className="games-grid">
+            <div className="game-card">
+              <h3>Festivalquiz</h3>
+              <FestivalQuiz />
+            </div>
+
+            <div className="game-card">
+              <h3>Hvilken festivaltype er du?</h3>
+              <FestivalTypeTest />
+            </div>
+
+            <div className="game-card">
+              <h3>Festival-bingo</h3>
+              <FestivalBingo />
+            </div>
           </div>
         </section>
 
