@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 
+import { FestivalLegalPage, FestivalMemoriesDesktopPage, FestivalMemoriesPage } from './festivalMemories'
+
 const posterFile = '/spjellerup-musikfestival-2026.png'
 
 type AppLocationState = {
@@ -165,15 +167,6 @@ const festivalBingoItems = [
   'Find festivalplakaten',
   'Smil til en ven',
   'Sig “god festival”',
-]
-
-const festivalMemoriesGalleryPlaceholders = [
-  'Hovedscenen',
-  'Festivalpladsen',
-  'Fællessang',
-  'Mad og boder',
-  'Festivalvenner',
-  'Dagens finale',
 ]
 
 const getCurrentLocationState = (): AppLocationState => {
@@ -817,159 +810,6 @@ const FestivalBingoPage: React.FC<{
   )
 }
 
-const FestivalMemoriesDesktopPage: React.FC<{
-  onBackHome: () => void
-  onOpenLegal: () => void
-}> = ({ onBackHome, onOpenLegal }) => (
-  <main className="memories-page memories-page--desktop">
-    <div className="memories-page__shell memories-page__shell--desktop">
-      <section className="memories-gallery-hero">
-        <div className="memories-gallery-hero__top">
-          <div className="badge">Offentligt galleri</div>
-          <button className="btn outline memories-gallery-hero__back" onClick={onBackHome} type="button">
-            Tilbage til forsiden
-          </button>
-        </div>
-
-        <h1 className="memories-page__title">Festivalminder</h1>
-        <p className="memories-page__subtitle">Her kan I se billeder fra festivaldagen</p>
-        <p className="memories-gallery-hero__lead">
-          Når festivalen er i gang, kan elever og deltagere uploade deres 3 bedste billeder fra mobilen.
-          Billederne kan derefter blive vist her på festivalhjemmesiden.
-        </p>
-      </section>
-
-      <section className="memories-gallery-grid" aria-label="Festivalminder galleri placeholder">
-        {festivalMemoriesGalleryPlaceholders.map((label, index) => (
-          <article key={label} className={`memories-gallery-card memories-gallery-card--accent-${(index % 3) + 1}`}>
-            <div className="memories-gallery-card__visual" aria-hidden="true">
-              <span className="memories-gallery-card__spark"></span>
-              <span className="memories-gallery-card__spark"></span>
-              <span className="memories-gallery-card__spark"></span>
-            </div>
-            <div className="memories-gallery-card__body">
-              <div className="memories-gallery-card__label">{label}</div>
-              <p>Billeder vises her, når festivalen er i gang.</p>
-            </div>
-          </article>
-        ))}
-      </section>
-
-      <section className="memories-gallery-footer">
-        <div className="memories-card memories-card--info">
-          <h2>Praktisk info</h2>
-          <p>Billeder slettes igen efter 10 dage.</p>
-        </div>
-
-        <button className="btn outline memories-link memories-link--desktop" onClick={onOpenLegal} type="button">
-          Læs om billeder og GDPR
-        </button>
-      </section>
-    </div>
-  </main>
-)
-
-const FestivalMemoriesPage: React.FC<{
-  onBackHome: () => void
-  onOpenLegal: () => void
-}> = ({ onBackHome, onOpenLegal }) => (
-  <main className="memories-page">
-    <div className="memories-page__shell">
-      <header className="memories-topbar">
-        <button className="btn outline memories-topbar__back" onClick={onBackHome} type="button">
-          Tilbage til forsiden
-        </button>
-
-        <div className="memories-topbar__meta">Festivalminder</div>
-        <h1 className="memories-page__title">Festivalminder</h1>
-        <p className="memories-page__subtitle">Del dine 3 bedste billeder fra festivalen</p>
-      </header>
-
-      <section className="memories-card memories-card--intro">
-        <p>
-          Når du uploader billeder, kan de blive vist på festivalhjemmesiden, så andre kan se minderne fra dagen.
-        </p>
-        <p className="memories-card__text-muted">Vælg kun billeder, du selv synes er gode, rare og ordentlige.</p>
-      </section>
-
-      <section className="memories-card memories-card--rules">
-        <h2>Sådan passer vi på hinanden</h2>
-
-        <ul className="memories-rules">
-          <li>Del kun gode festivalbilleder.</li>
-          <li>Upload ikke billeder, der kan gøre andre kede af det.</li>
-          <li>Spørg altid, hvis du er i tvivl om nogen vil være med på billedet.</li>
-          <li>Upload kun billeder, som gerne må vises på festivalhjemmesiden.</li>
-          <li>Billederne slettes igen efter 10 dage.</li>
-          <li>Kontakt skolen, hvis et billede ønskes fjernet før.</li>
-        </ul>
-      </section>
-
-      <button className="btn outline memories-link" onClick={onOpenLegal} type="button">
-        Læs om billeder og GDPR
-      </button>
-
-      <section className="memories-card memories-card--upload">
-        <div className="memories-upload__status">Upload kommer snart</div>
-        <button className="btn primary memories-upload__button" disabled type="button">
-          Upload kommer snart
-        </button>
-        <p className="memories-upload__note">Her kan du senere vælge op til 3 billeder.</p>
-        <p className="memories-upload__expiry">Billeder slettes igen efter 10 dage.</p>
-      </section>
-    </div>
-  </main>
-)
-
-const FestivalLegalPage: React.FC<{
-  onBackToMemories: () => void
-}> = ({ onBackToMemories }) => (
-  <main className="legal-page">
-    <div className="legal-page__shell">
-      <header className="legal-page__hero">
-        <button className="btn outline legal-page__back" onClick={onBackToMemories} type="button">
-          Tilbage til Festivalminder
-        </button>
-
-        <div className="legal-page__eyebrow">Praktisk information</div>
-        <h1 className="legal-page__title">Billeder, samtykke og GDPR</h1>
-      </header>
-
-      <section className="legal-card">
-        <p>
-          På Spjellerup Musikfestival kan deltagere senere få mulighed for at uploade billeder fra festivaldagen.
-          Billederne kan blive vist offentligt på festivalhjemmesiden i en kort periode.
-        </p>
-
-        <p>
-          Upload kun billeder, hvor du vurderer, at personerne på billedet gerne vil være med. Upload ikke billeder
-          fra private, sårbare eller ubehagelige situationer.
-        </p>
-
-        <p>
-          Ved upload bekræfter du, at billedet må vises på festivalhjemmesiden i op til 10 dage.
-        </p>
-
-        <p>
-          Billederne bruges kun til at dele stemningsfulde minder fra festivalen. De bruges ikke til reklamer,
-          videresælges ikke og deles ikke med andre tjenester.
-        </p>
-
-        <p>Billeder slettes igen efter senest 10 dage.</p>
-
-        <p>
-          Hvis du eller dine forældre ønsker et billede fjernet tidligere, kan I kontakte skolen, så billedet kan blive
-          fjernet.
-        </p>
-      </section>
-
-      <section className="legal-card legal-card--note">
-        <p>Denne side er en praktisk informationstekst og ikke juridisk rådgivning.</p>
-      </section>
-    </div>
-  </main>
-)
-
 const App: React.FC = () => {
   const [locationState, setLocationState] = useState<AppLocationState>(() => getCurrentLocationState())
   const [isDesktopViewport, setIsDesktopViewport] = useState<boolean>(() => getIsDesktopViewport())
@@ -1283,6 +1123,9 @@ const App: React.FC = () => {
 
             <div className="cta-row">
               <a className="btn primary" href="#program">Se program</a>
+              <button className="btn outline hero-memories-cta desktop-only" onClick={() => navigateTo('/minder')} type="button">
+                Se billeder fra festivalen
+              </button>
               <button className="btn outline desktop-only" onClick={() => setIsOpen(true)} type="button">Se plakat</button>
               <a className="btn download desktop-only" href={posterFile} download="spjellerup-musikfestival-2026.png">Download plakat</a>
               <button className="btn primary mobile-only" onClick={() => navigateTo('/spil')} type="button">Prøv festivalspil</button>
