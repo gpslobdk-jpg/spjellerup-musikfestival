@@ -808,6 +808,69 @@ const FestivalBingoPage: React.FC<{
   )
 }
 
+const FestivalMemoriesDesktopNotice: React.FC<{
+  onBackHome: () => void
+}> = ({ onBackHome }) => (
+  <main className="memories-page memories-page--desktop">
+    <div className="memories-page__shell">
+      <button className="btn outline memories-topbar__back" onClick={onBackHome} type="button">
+        Tilbage til forsiden
+      </button>
+
+      <section className="memories-page__hero">
+        <div className="badge">Mobiloplevelse</div>
+        <h1 className="memories-page__title">Festivalminder</h1>
+        <p className="memories-page__subtitle">Festivalminder er lavet til mobil.</p>
+      </section>
+
+      <section className="memories-card memories-card--desktop-message">
+        <p>Åbn siden på din telefon for den bedste oplevelse.</p>
+      </section>
+    </div>
+  </main>
+)
+
+const FestivalMemoriesPage: React.FC<{
+  onBackHome: () => void
+}> = ({ onBackHome }) => (
+  <main className="memories-page">
+    <div className="memories-page__shell">
+      <header className="memories-topbar">
+        <button className="btn outline memories-topbar__back" onClick={onBackHome} type="button">
+          Tilbage til forsiden
+        </button>
+
+        <div className="memories-topbar__meta">Festivalminder</div>
+        <h1 className="memories-page__title">Festivalminder</h1>
+        <p className="memories-page__subtitle">Del dine 3 bedste billeder fra festivalen</p>
+      </header>
+
+      <section className="memories-card memories-card--intro">
+        <p>Upload kommer snart. Her kan du senere dele dine bedste festivalbilleder.</p>
+      </section>
+
+      <section className="memories-card memories-card--rules">
+        <h2>Sådan passer vi på hinanden</h2>
+
+        <ul className="memories-rules">
+          <li>Del kun gode festivalbilleder.</li>
+          <li>Upload ikke billeder, der kan gøre andre kede af det.</li>
+          <li>Spørg altid, hvis du er i tvivl om nogen vil være med på billedet.</li>
+          <li>Billeder kan blive vist på festivalhjemmesiden i op til 10 dage.</li>
+        </ul>
+      </section>
+
+      <section className="memories-card memories-card--upload">
+        <div className="memories-upload__status">Upload kommer snart</div>
+        <button className="btn primary memories-upload__button" disabled type="button">
+          Upload billeder
+        </button>
+        <p className="memories-upload__note">Upload bliver aktiveret senere.</p>
+      </section>
+    </div>
+  </main>
+)
+
 const App: React.FC = () => {
   const [locationState, setLocationState] = useState<AppLocationState>(() => getCurrentLocationState())
   const [isDesktopViewport, setIsDesktopViewport] = useState<boolean>(() => getIsDesktopViewport())
@@ -820,6 +883,7 @@ const App: React.FC = () => {
 
   const gameRoute = getFestivalGameRoute(locationState.pathname)
   const isGamesRoute = gameRoute !== null
+  const isMemoriesRoute = locationState.pathname === '/minder'
 
   const stopIntroMedia = () => {
     try {
@@ -907,7 +971,7 @@ const App: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    if (isGamesRoute) {
+    if (isGamesRoute || isMemoriesRoute) {
       setShowIntro(false)
       setIsOpen(false)
       stopIntroMedia()
@@ -919,7 +983,7 @@ const App: React.FC = () => {
     } else {
       setShowIntro(false)
     }
-  }, [isGamesRoute, isDesktopViewport, prefersReducedMotion])
+  }, [isGamesRoute, isMemoriesRoute, isDesktopViewport, prefersReducedMotion])
 
   const navigateTo = (path: string) => {
     if (typeof window === 'undefined') return
@@ -1019,6 +1083,14 @@ const App: React.FC = () => {
     return <FestivalBingoPage onBackToMenu={() => navigateTo('/spil')} />
   }
 
+  if (isMemoriesRoute) {
+    if (isDesktopViewport) {
+      return <FestivalMemoriesDesktopNotice onBackHome={() => navigateTo('/')} />
+    }
+
+    return <FestivalMemoriesPage onBackHome={() => navigateTo('/')} />
+  }
+
   return (
     <div className="app">
       {showIntro && (
@@ -1097,9 +1169,10 @@ const App: React.FC = () => {
 
             <div className="cta-row">
               <a className="btn primary" href="#program">Se program</a>
-              <button className="btn outline" onClick={() => setIsOpen(true)} type="button">Se plakat</button>
-              <a className="btn download" href={posterFile} download="spjellerup-musikfestival-2026.png">Download plakat</a>
+              <button className="btn outline desktop-only" onClick={() => setIsOpen(true)} type="button">Se plakat</button>
+              <a className="btn download desktop-only" href={posterFile} download="spjellerup-musikfestival-2026.png">Download plakat</a>
               <button className="btn primary mobile-only" onClick={() => navigateTo('/spil')} type="button">Prøv festivalspil</button>
+              <button className="btn outline mobile-only" onClick={() => navigateTo('/minder')} type="button">Festivalminder</button>
             </div>
           </div>
 
