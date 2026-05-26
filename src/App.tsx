@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 
 import { FestivalLegalPage, FestivalMemoriesDesktopPage, FestivalMemoriesPage } from './festivalMemories'
 
-const posterFile = '/feardigeplakat.png'
+const posterFile = '/sidsteplakat.png'
 
 type AppLocationState = {
   pathname: string
