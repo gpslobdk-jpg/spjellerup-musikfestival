@@ -1202,7 +1202,7 @@ const App: React.FC = () => {
         <section id="kontakt" className="section contact">
           <h2>Kontakt / mere info</h2>
           <p>
-            For spørgsmål: <a href="mailto:kontakt@spjellerupmusikfestival.dk">kontakt@spjellerupmusikfestival.dk</a>
+            For spørgsmål: <a href="mailto:kontor@spjellerupfriskole.dk">kontor@spjellerupfriskole.dk</a>
           </p>
         </section>
       </main>
