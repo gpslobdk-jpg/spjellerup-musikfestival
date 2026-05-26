@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 
 import { FestivalLegalPage, FestivalMemoriesDesktopPage, FestivalMemoriesPage } from './festivalMemories'
 
-const posterFile = '/sidsteplakat.png'
+const posterFile = '/spjellerup-musikfestival-2026v2.png'
 
 type AppLocationState = {
   pathname: string
@@ -1067,7 +1067,7 @@ const App: React.FC = () => {
               <div className="badge intro-badge">Gratis fællesskabsdag</div>
               <h1 className="intro-title">Spjellerup Musikfestival 2026</h1>
               <p className="intro-sub">Musik · fællesskab · show · humor</p>
-              <div className="intro-meta">Torsdag d. 04. juni 2026 • Start kl. 11.00</div>
+              <div className="intro-meta">Torsdag d. 04. juni 2026 • Start kl. 10.00</div>
 
               <div className="intro-ctas">
                 <button className="btn primary large" onClick={enterSite} type="button">Gå ind på siden</button>
@@ -1113,7 +1113,7 @@ const App: React.FC = () => {
 
             <div className="meta">
               <div className="date">Torsdag d. 04. juni 2026</div>
-              <div className="time">Start kl. 11.00 · Spjellerupvej 33, 4640 Faxe</div>
+              <div className="time">Start kl. 10.00 · Spjellerupvej 33, 4640 Faxe</div>
             </div>
 
             <p className="intro">
@@ -1123,6 +1123,7 @@ const App: React.FC = () => {
 
             <div className="cta-row">
               <a className="btn primary" href="#program">Se program</a>
+              <a className="btn primary" href="https://event.it/spjellerupfriskole/event/nsgg3k" target="_blank" rel="noopener">Få gratis billet</a>
               <button className="btn outline hero-memories-cta desktop-only" onClick={() => navigateTo('/minder')} type="button">
                 Se billeder fra festivalen
               </button>
@@ -1161,14 +1162,27 @@ const App: React.FC = () => {
         </section>
 
         <section id="program" className="section program">
-          <h2>Program</h2>
+          <h2>Program til musikfestivalen</h2>
           <div className="program-card">
+            <h3>Skoledag for inviterede skoler kl. 10 - 14</h3>
             <ul className="schedule">
-              <li><span className="time">11.00</span> — Festivalen åbner</li>
-              <li><span className="time">11.15</span> — Musik og fællessang</li>
-              <li><span className="time">12.00</span> — Boder, mad og aktiviteter</li>
-              <li><span className="time">13.00</span> — Show, optrædener og overraskelser</li>
-              <li><span className="time">14.00</span> — Tak for i dag</li>
+              <li><span className="time">10:00</span> — Dørene åbner</li>
+              <li><span className="time">10:15</span> — Velkomst fra scenen</li>
+              <li><span className="time">10:30</span> — Børnehuset og indskolingen</li>
+              <li><span className="time">11:00</span> — Fonnesbech</li>
+              <li><span className="time">12:00</span> — Rockbussen</li>
+              <li><span className="time">13:00</span> — Meduza</li>
+            </ul>
+
+            <h3>Musikfestival for alle kl. 14 - 20</h3>
+            <ul className="schedule">
+              <li><span className="time">14:00</span> — Børnehuset og indskolingen</li>
+              <li><span className="time">14:15</span> — Fonnesbech</li>
+              <li><span className="time">15:00</span> — Rockbussen</li>
+              <li><span className="time">16:15</span> — Faxe Gospel</li>
+              <li><span className="time">17:15</span> — Meduza</li>
+              <li><span className="time">19:00</span> — Rasmus Nøhr</li>
+              <li><span className="time">20:00</span> — Tak for i år</li>
             </ul>
           </div>
         </section>
@@ -1177,9 +1191,11 @@ const App: React.FC = () => {
           <h2>Praktisk info</h2>
           <ul>
             <li>Dato: Torsdag d. 04. juni 2026</li>
-            <li>Tid: Start kl. 11.00</li>
+            <li>Skoledag for inviterede skoler: kl. 10.00 - 14.00</li>
+            <li>Musikfestival for alle: kl. 14.00 - 20.00</li>
             <li>Sted: Spjellerupvej 33, 4640 Faxe</li>
-            <li>Husk godt humør — mere program følger</li>
+            <li>Billet: Gratis billet skal hentes på forhånd. Billetter kan også fås i døren.</li>
+            <li>Link: <a href="https://event.it/spjellerupfriskole/event/nsgg3k" target="_blank" rel="noopener">https://event.it/spjellerupfriskole/event/nsgg3k</a></li>
           </ul>
         </section>
 
