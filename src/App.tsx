@@ -810,12 +810,38 @@ const FestivalBingoPage: React.FC<{
   )
 }
 
+const MobileIntro: React.FC<{ onContinue: () => void }> = ({ onContinue }) => (
+  <section className="mobile-intro mobile-only" role="dialog" aria-modal="true" aria-label="Gem festivalen på din mobil">
+    <div className="mobile-intro__card">
+      <h2 className="mobile-intro__title">Gem festivalen på din mobil</h2>
+      <p className="mobile-intro__lead">Så har du program, billetter og festivalminder lige ved hånden. Du kan også bare bruge siden direkte i browseren.</p>
+
+      <div className="mobile-intro__platforms" aria-hidden>
+        <div className="mobile-intro__platform">
+          <strong>Android</strong>
+          <div>Tryk på ⋮ i browseren og vælg ‘Føj til startskærm’ eller ‘Installer app’, hvis knappen vises.</div>
+        </div>
+        <div className="mobile-intro__platform">
+          <strong>iPhone</strong>
+          <div>Tryk på Del‑knappen og vælg ‘Føj til hjemmeskærm’.</div>
+        </div>
+      </div>
+
+      <div className="mobile-intro__actions">
+        <button className="btn primary mobile-intro__primary" onClick={onContinue} type="button">Gå videre til festival-siden</button>
+        <button className="btn outline mobile-intro__secondary" onClick={onContinue} type="button">Vis mig bare siden</button>
+      </div>
+    </div>
+  </section>
+)
+
 const App: React.FC = () => {
   const [locationState, setLocationState] = useState<AppLocationState>(() => getCurrentLocationState())
   const [isDesktopViewport, setIsDesktopViewport] = useState<boolean>(() => getIsDesktopViewport())
   const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(() => getPrefersReducedMotion())
   const [isOpen, setIsOpen] = useState(false)
   const [showIntro, setShowIntro] = useState(false)
+  const [showMobileIntro, setShowMobileIntro] = useState(false)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [soundOn, setSoundOn] = useState(false)
@@ -859,7 +885,7 @@ const App: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    if (isOpen || showIntro) {
+    if (isOpen || showIntro || showMobileIntro) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
@@ -868,7 +894,7 @@ const App: React.FC = () => {
     return () => {
       document.body.style.overflow = ''
     }
-  }, [isOpen, showIntro])
+  }, [isOpen, showIntro, showMobileIntro])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -913,6 +939,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isGamesRoute || isMemoriesRoute || isLegalRoute) {
       setShowIntro(false)
+      setShowMobileIntro(false)
       setIsOpen(false)
       stopIntroMedia()
       return
@@ -924,6 +951,38 @@ const App: React.FC = () => {
       setShowIntro(false)
     }
   }, [isGamesRoute, isMemoriesRoute, isLegalRoute, isDesktopViewport, prefersReducedMotion])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    // Only show on root path and only on mobile
+    if (locationState.pathname !== '/') {
+      setShowMobileIntro(false)
+      return
+    }
+
+    if (isDesktopViewport) {
+      setShowMobileIntro(false)
+      return
+    }
+
+    if (isGamesRoute || isMemoriesRoute || isLegalRoute) {
+      setShowMobileIntro(false)
+      return
+    }
+
+    try {
+      const seen = window.localStorage.getItem('spjellerupMobileIntroSeen') === '1'
+      if (seen) {
+        setShowMobileIntro(false)
+        return
+      }
+    } catch {
+      // localStorage unavailable — fall back to showing intro
+    }
+
+    setShowMobileIntro(true)
+  }, [locationState.pathname, isDesktopViewport, isGamesRoute, isMemoriesRoute, isLegalRoute])
 
   const navigateTo = (path: string) => {
     if (typeof window === 'undefined') return
@@ -996,6 +1055,18 @@ const App: React.FC = () => {
     }, 60)
   }
 
+  const handleMobileIntroContinue = () => {
+    try {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('spjellerupMobileIntroSeen', '1')
+      }
+    } catch {
+      // ignore localStorage errors
+    }
+
+    setShowMobileIntro(false)
+  }
+
   if (gameRoute) {
     if (isDesktopViewport) {
       return <FestivalGamesDesktopNotice onBackHome={() => navigateTo('/')} />
@@ -1047,6 +1118,7 @@ const App: React.FC = () => {
 
   return (
     <div className="app">
+      {showMobileIntro && <MobileIntro onContinue={handleMobileIntroContinue} />}
       {showIntro && (
         <section className="intro-video" aria-hidden={false}>
           <video
