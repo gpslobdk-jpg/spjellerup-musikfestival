@@ -669,6 +669,61 @@ const FestivalQuizPage: React.FC<{
   )
 }
 
+const FoodPage: React.FC<{ onBackHome: () => void }> = ({ onBackHome }) => (
+  <main className="food-page">
+    <div className="food-page__shell">
+      <button className="btn outline games-page__back" onClick={onBackHome} type="button">Tilbage til forsiden</button>
+
+      <section className="food-page__hero">
+        <h1 className="food-page__title">Mad & drikke</h1>
+        <p className="food-page__lead">Ingen skal gå sultne hjem fra festivalen! I år kan I købe både mad, is, milkshakes og søde fristelser direkte på festivalpladsen.</p>
+      </section>
+
+      <section className="food-grid" aria-label="Madboder">
+        <article className="food-card">
+          <div className="food-card__header">
+            <div className="food-card__emoji">🍜</div>
+            <div>
+              <h3 className="food-card__title">Pranee’s Thai BBQ</h3>
+              <div className="food-card__subtitle">Lækker thaimad fra foodtruck</div>
+            </div>
+          </div>
+          <p className="food-card__text">Pranee’s Thai kommer forbi med smagfuld thaimad, så der er noget varmt og lækkert at spise mellem koncerterne.</p>
+        </article>
+
+        <article className="food-card">
+          <div className="food-card__header">
+            <div className="food-card__emoji">🍦</div>
+            <div>
+              <h3 className="food-card__title">Tante Fifi</h3>
+              <div className="food-card__subtitle">Is, milkshakes og søde fristelser</div>
+            </div>
+          </div>
+          <p className="food-card__text">Tante Fifi er klar med is, milkshakes, kaffe/iskaffe og farverige søde fristelser til både børn og voksne.</p>
+        </article>
+
+        <article className="food-card">
+          <div className="food-card__header">
+            <div className="food-card__emoji">🌭</div>
+            <div>
+              <h3 className="food-card__title">Curly’s Diner</h3>
+              <div className="food-card__subtitle">Hotdogs, milkshakes og diner-stemning</div>
+            </div>
+          </div>
+          <p className="food-card__text">Curly’s Diner serverer klassiske festivalfavoritter som hotdogs og milkshakes med hyggelig diner-stemning.</p>
+        </article>
+      </section>
+
+      <section className="section" style={{ marginTop: '0.5rem' }}>
+        <p>Tag familien under armen, nyd musikken — og snup noget lækkert undervejs.</p>
+        <div style={{ marginTop: 8 }}>
+          <button className="btn primary" onClick={onBackHome} type="button">Tilbage til forsiden</button>
+        </div>
+      </section>
+    </div>
+  </main>
+)
+
 const FestivalTypePage: React.FC<{
   onBackToMenu: () => void
 }> = ({ onBackToMenu }) => {
@@ -850,6 +905,7 @@ const App: React.FC = () => {
   const isGamesRoute = gameRoute !== null
   const isMemoriesRoute = locationState.pathname === '/minder'
   const isLegalRoute = locationState.pathname === '/jura'
+  const isFoodRoute = locationState.pathname === '/mad'
 
   const stopIntroMedia = () => {
     try {
@@ -937,7 +993,7 @@ const App: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    if (isGamesRoute || isMemoriesRoute || isLegalRoute) {
+    if (isGamesRoute || isMemoriesRoute || isLegalRoute || isFoodRoute) {
       setShowIntro(false)
       setShowMobileIntro(false)
       setIsOpen(false)
@@ -950,7 +1006,7 @@ const App: React.FC = () => {
     } else {
       setShowIntro(false)
     }
-  }, [isGamesRoute, isMemoriesRoute, isLegalRoute, isDesktopViewport, prefersReducedMotion])
+  }, [isGamesRoute, isMemoriesRoute, isLegalRoute, isFoodRoute, isDesktopViewport, prefersReducedMotion])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -966,7 +1022,7 @@ const App: React.FC = () => {
       return
     }
 
-    if (isGamesRoute || isMemoriesRoute || isLegalRoute) {
+    if (isGamesRoute || isMemoriesRoute || isLegalRoute || isFoodRoute) {
       setShowMobileIntro(false)
       return
     }
@@ -982,7 +1038,7 @@ const App: React.FC = () => {
     }
 
     setShowMobileIntro(true)
-  }, [locationState.pathname, isDesktopViewport, isGamesRoute, isMemoriesRoute, isLegalRoute])
+  }, [locationState.pathname, isDesktopViewport, isGamesRoute, isMemoriesRoute, isLegalRoute, isFoodRoute])
 
   const navigateTo = (path: string) => {
     if (typeof window === 'undefined') return
@@ -1094,6 +1150,10 @@ const App: React.FC = () => {
     return <FestivalBingoPage onBackToMenu={() => navigateTo('/spil')} />
   }
 
+  if (isFoodRoute) {
+    return <FoodPage onBackHome={() => navigateTo('/')} />
+  }
+
   if (isMemoriesRoute) {
     if (isDesktopViewport) {
       return (
@@ -1196,6 +1256,7 @@ const App: React.FC = () => {
             <div className="cta-row">
               <a className="btn primary" href="#program">Se program</a>
               <a className="btn primary" href="https://event.it/spjellerupfriskole/event/nsgg3k" target="_blank" rel="noopener">Få gratis billet</a>
+              <button className="btn primary" onClick={() => navigateTo('/mad')} type="button">🍔 Mad & drikke</button>
               <button className="btn outline hero-memories-cta desktop-only" onClick={() => navigateTo('/minder')} type="button">
                 Se billeder fra festivalen
               </button>
