@@ -5,7 +5,7 @@ import { isSupabaseConfigured, supabase } from './lib/supabaseClient'
 const FESTIVAL_MEMORY_MAX_FILES = 3
 const FESTIVAL_MEMORY_MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024
 const FESTIVAL_MEMORY_RETENTION_DAYS = 10
-const FESTIVAL_MEMORY_CONFIG_MESSAGE = 'Upload er ikke konfigureret endnu.'
+const FESTIVAL_MEMORY_CONFIG_MESSAGE = 'Upload er ikke konfigureret endnu. Tjek Supabase-indstillinger.'
 const FESTIVAL_MEMORY_EMPTY_MESSAGE = 'Billeder vises her, når festivalen er i gang.'
 const FESTIVAL_MEMORY_COLUMNS = 'id, storage_path, public_url, file_size, mime_type, created_at, expires_at, consent_accepted'
 
@@ -525,6 +525,21 @@ export const FestivalMemoriesPage = ({ onBackHome, onOpenLegal }: FestivalMemory
     }
   }, [selectedMemories])
 
+  const handleChooseFiles = () => {
+    setSelectionError(null)
+    setSuccessMessage(null)
+
+    if (!isSupabaseConfigured) {
+      setUploadError(FESTIVAL_MEMORY_CONFIG_MESSAGE)
+      return
+    }
+
+    if (isUploading) return
+
+    setUploadError(null)
+    fileInputRef.current?.click()
+  }
+
   const handleFileSelection = (event: React.ChangeEvent<HTMLInputElement>) => {
     const nextFiles = Array.from(event.target.files ?? [])
     event.target.value = ''
@@ -557,6 +572,9 @@ export const FestivalMemoriesPage = ({ onBackHome, onOpenLegal }: FestivalMemory
     const files = selectedMemories.map((memory) => memory.file)
     const validationError = validateSelectedFiles(files)
 
+    setUploadError(null)
+    setSuccessMessage(null)
+
     if (!isSupabaseConfigured) {
       setUploadError(FESTIVAL_MEMORY_CONFIG_MESSAGE)
       return
@@ -568,7 +586,7 @@ export const FestivalMemoriesPage = ({ onBackHome, onOpenLegal }: FestivalMemory
     }
 
     if (!consentAccepted) {
-      setUploadError('Du skal bekræfte reglerne før upload.')
+      setUploadError('Sæt flueben ved samtykke, før du uploader.')
       return
     }
 
@@ -664,25 +682,39 @@ export const FestivalMemoriesPage = ({ onBackHome, onOpenLegal }: FestivalMemory
           )}
 
           <section className="memories-card memories-card--upload">
-            <div className="memories-upload__status">Upload billeder</div>
+            <button
+              className="memories-upload__status"
+              disabled={isUploading}
+              onClick={handleChooseFiles}
+              type="button"
+            >
+              {isUploading ? 'Billederne uploades...' : 'Upload billeder'}
+            </button>
 
             <div className="memories-card__header">
               <h2>Vælg op til 3 billeder</h2>
               <p>Upload kun ordentlige billeder, hvor personer gerne vil være med. Hvert billede må maks fylde 5 MB.</p>
             </div>
 
-            <label className="btn outline memories-upload__picker">
-              <span className="memories-upload__picker-copy">Vælg billeder</span>
-              <input
-                ref={fileInputRef}
-                accept="image/*"
-                className="memories-upload__input"
-                disabled={!isSupabaseConfigured || isUploading}
-                multiple
-                onChange={handleFileSelection}
-                type="file"
-              />
-            </label>
+            <button
+              className="btn outline memories-upload__picker"
+              disabled={isUploading}
+              onClick={handleChooseFiles}
+              type="button"
+            >
+              <span className="memories-upload__picker-copy">
+                {isUploading ? 'Billederne uploades...' : 'Vælg billeder'}
+              </span>
+            </button>
+            <input
+              ref={fileInputRef}
+              accept="image/*"
+              disabled={!isSupabaseConfigured || isUploading}
+              hidden
+              multiple
+              onChange={handleFileSelection}
+              type="file"
+            />
 
             <p className="memories-upload__help">
               Vælg op til 3 billeder. Billederne kan blive vist offentligt på festivalhjemmesiden og slettes efter senest 10 dage.
@@ -730,7 +762,7 @@ export const FestivalMemoriesPage = ({ onBackHome, onOpenLegal }: FestivalMemory
             <div className="memories-upload__actions">
               <button
                 className="btn primary memories-upload__button"
-                disabled={!isSupabaseConfigured || isUploading || selectedMemories.length === 0 || !consentAccepted}
+                disabled={isUploading}
                 onClick={handleUpload}
                 type="button"
               >
